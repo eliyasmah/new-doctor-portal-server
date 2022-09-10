@@ -42,10 +42,13 @@ async function run() {
       .db("new_doctors_portal")
       .collection("bookings");
     const userCollection = client.db("new_doctors_portal").collection("users");
+    const doctorCollection = client
+      .db("new_doctors_portal")
+      .collection("doctors");
 
     app.get("/service", async (req, res) => {
       const query = {};
-      const cursor = serviceCollection.find(query);
+      const cursor = serviceCollection.find(query).project({ name: 1 });
       const services = await cursor.toArray();
       res.send(services);
     });
@@ -128,6 +131,24 @@ async function run() {
       } else {
         return res.status(403).send({ message: "forbidden access" });
       }
+    });
+
+    app.get("/doctor", async (req, res) => {
+      const doctors = await doctorCollection.find().toArray();
+      res.send(doctors);
+    });
+
+    app.post("/doctor", async (req, res) => {
+      const doctor = req.body;
+      const result = await doctorCollection.insertOne(doctor);
+      res.send(result);
+    });
+
+    app.delete("/doctor/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await doctorCollection.deleteOne(filter);
+      res.send(result);
     });
 
     app.post("/booking", async (req, res) => {
